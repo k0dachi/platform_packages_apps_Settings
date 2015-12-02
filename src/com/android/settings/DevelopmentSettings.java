@@ -182,6 +182,9 @@ public class DevelopmentSettings extends SettingsPreferenceFragment
 
     private static final int REQUEST_CODE_ENABLE_OEM_UNLOCK = 0;
 
+    private static final String PAX_SOFT_MODE_KEY = "pax_soft_mode";
+    private static final String PAX_SOFT_MODE_PERSIST_PROP = "persist.security.pax_soft_mode";
+
     private static String DEFAULT_LOG_RING_BUFFER_SIZE_IN_BYTES = "262144"; // 256K
 
     private static final int[] MOCK_LOCATION_APP_OPS = new int[] {AppOpsManager.OP_MOCK_LOCATION};
@@ -206,6 +209,7 @@ public class DevelopmentSettings extends SettingsPreferenceFragment
     private SwitchPreference mKeepScreenOn;
     private SwitchPreference mBtHciSnoopLog;
     private SwitchPreference mEnableOemUnlock;
+    private SwitchPreference mPaxSoftMode;
     private SwitchPreference mDebugViewAttributes;
 
     private PreferenceScreen mPassword;
@@ -330,6 +334,7 @@ public class DevelopmentSettings extends SettingsPreferenceFragment
             removePreference(mEnableOemUnlock);
             mEnableOemUnlock = null;
         }
+        mPaxSoftMode = findAndInitSwitchPref(PAX_SOFT_MODE_KEY);
 
         mDebugViewAttributes = findAndInitSwitchPref(DEBUG_VIEW_ATTRIBUTES);
         mPassword = (PreferenceScreen) findPreference(LOCAL_BACKUP_PASSWORD);
@@ -341,6 +346,7 @@ public class DevelopmentSettings extends SettingsPreferenceFragment
             disableForUser(mClearAdbKeys);
             disableForUser(mEnableTerminal);
             disableForUser(mPassword);
+            disableForUser(mPaxSoftMode);
         }
 
         mDebugAppPref = findPreference(DEBUG_APP_KEY);
@@ -642,6 +648,8 @@ public class DevelopmentSettings extends SettingsPreferenceFragment
         updateMobileDataAlwaysOnOptions();
         updateSimulateColorSpace();
         updateUSBAudioOptions();
+        updatePaxSoftModeOptions();
+
         if (mColorTemperaturePreference != null) {
             updateColorTemperature();
         }
@@ -1212,6 +1220,18 @@ public class DevelopmentSettings extends SettingsPreferenceFragment
                 mUSBAudio.isChecked() ? 1 : 0);
     }
 
+    private void updatePaxSoftModeOptions() {
+        updateSwitchPreference(mPaxSoftMode,
+                SystemProperties.getBoolean(PAX_SOFT_MODE_PERSIST_PROP,
+                false));
+    }
+
+    private void writePaxSoftModeOptions() {
+        SystemProperties.set(PAX_SOFT_MODE_PERSIST_PROP,
+                mPaxSoftMode.isChecked() ? "1" : "0");
+        pokeSystemProperties();
+    }
+
     private void updateForceRtlOptions() {
         updateSwitchPreference(mForceRtlLayout,
                 Settings.Global.getInt(getActivity().getContentResolver(),
@@ -1740,6 +1760,8 @@ public class DevelopmentSettings extends SettingsPreferenceFragment
             writeUSBAudioOptions();
         } else if (INACTIVE_APPS_KEY.equals(preference.getKey())) {
             startInactiveAppsFragment();
+        } else if (preference == mPaxSoftMode) {
+            writePaxSoftModeOptions();
         } else {
             return super.onPreferenceTreeClick(preferenceScreen, preference);
         }

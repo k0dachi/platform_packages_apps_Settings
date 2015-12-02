@@ -3614,6 +3614,10 @@
     <!-- Warning dialog message to confirm user wishes to enable OEM unlock and disable theft protection features -->
     <string name="confirm_enable_oem_unlock_text">WARNING: Device protection features will not work on this device while this setting is turned on.</string>
 
+    <!-- PaX soft mode -->
+    <string name="pax_soft_mode_title">PaX soft mode</string>
+    <string name="pax_soft_mode_summary">Disable PaX userspace hardening features</string>
+
     <!-- UI debug setting: limit size of Android logger buffers -->
     <string name="select_logd_size_title">Logger buffer sizes</string>
     <!-- UI debug setting: limit size of Android logger buffers [CHAR LIMIT=59] -->
