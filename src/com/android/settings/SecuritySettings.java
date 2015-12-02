@@ -33,6 +33,7 @@ import android.os.Bundle;
 import android.os.PersistableBundle;
 import android.os.UserHandle;
 import android.os.UserManager;
+import android.os.SystemProperties;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.Preference.OnPreferenceChangeListener;
@@ -104,10 +105,19 @@ public class SecuritySettings extends SettingsPreferenceFragment
     private static final String KEY_TRUST_AGENT = "trust_agent";
     private static final String KEY_SCREEN_PINNING = "screen_pinning_settings";
 
+    // malloc configuration
+    private static final String KEY_MALLOC_CANARIES = "malloc_canaries";
+    private static final String KEY_MALLOC_GUARD = "malloc_guard";
+    private static final String KEY_MALLOC_FREEUNMAP = "malloc_freeunmap";
+    private static final String KEY_MALLOC_VALIDATE_FULL = "malloc_validate_full";
+    private static final String KEY_MALLOC_JUNK = "malloc_junk";
+    private static final String MALLOC_PERSIST_PROP = "persist.libc.malloc.options";
+
     // These switch preferences need special handling since they're not all stored in Settings.
     private static final String SWITCH_PREFERENCE_KEYS[] = { KEY_LOCK_AFTER_TIMEOUT,
             KEY_VISIBLE_PATTERN, KEY_POWER_INSTANTLY_LOCKS, KEY_SHOW_PASSWORD,
-            KEY_TOGGLE_INSTALL_APPLICATIONS };
+            KEY_TOGGLE_INSTALL_APPLICATIONS, KEY_MALLOC_CANARIES, KEY_MALLOC_GUARD,
+            KEY_MALLOC_FREEUNMAP, KEY_MALLOC_VALIDATE_FULL, KEY_MALLOC_JUNK };
 
     // Only allow one trust agent on the platform.
     private static final boolean ONLY_ONE_TRUST_AGENT = true;
@@ -136,6 +146,12 @@ public class SecuritySettings extends SettingsPreferenceFragment
 
     private Intent mTrustAgentClickIntent;
     private Preference mOwnerInfoPref;
+
+    private SwitchPreference mMallocCanaries;
+    private SwitchPreference mMallocGuard;
+    private SwitchPreference mMallocFreeUnmap;
+    private SwitchPreference mMallocValidate;
+    private SwitchPreference mMallocJunk;
 
     @Override
     protected int getMetricsCategory() {
@@ -325,6 +341,20 @@ public class SecuritySettings extends SettingsPreferenceFragment
             if (manageAgents != null && !mLockPatternUtils.isSecure(MY_USER_ID)) {
                 manageAgents.setEnabled(false);
                 manageAgents.setSummary(R.string.disabled_because_no_backup_security);
+            }
+
+            if (mIsPrimary) {
+                mMallocCanaries = (SwitchPreference) advancedCategory.findPreference(KEY_MALLOC_CANARIES);
+                mMallocGuard = (SwitchPreference) advancedCategory.findPreference(KEY_MALLOC_GUARD);
+                mMallocFreeUnmap = (SwitchPreference) advancedCategory.findPreference(KEY_MALLOC_FREEUNMAP);
+                mMallocValidate = (SwitchPreference) advancedCategory.findPreference(KEY_MALLOC_VALIDATE_FULL);
+                mMallocJunk = (SwitchPreference) advancedCategory.findPreference(KEY_MALLOC_JUNK);
+            } else {
+                advancedCategory.removePreference(advancedCategory.findPreference(KEY_MALLOC_CANARIES));
+                advancedCategory.removePreference(advancedCategory.findPreference(KEY_MALLOC_GUARD));
+                advancedCategory.removePreference(advancedCategory.findPreference(KEY_MALLOC_FREEUNMAP));
+                advancedCategory.removePreference(advancedCategory.findPreference(KEY_MALLOC_VALIDATE_FULL));
+                advancedCategory.removePreference(advancedCategory.findPreference(KEY_MALLOC_JUNK));
             }
         }
 
@@ -622,6 +652,26 @@ public class SecuritySettings extends SettingsPreferenceFragment
             mResetCredentials.setEnabled(!mKeyStore.isEmpty());
         }
 
+        if (mMallocCanaries != null) {
+            mMallocCanaries.setChecked(SystemProperties.get(MALLOC_PERSIST_PROP).contains("C"));
+        }
+
+        if (mMallocGuard != null) {
+            mMallocGuard.setChecked(SystemProperties.get(MALLOC_PERSIST_PROP).contains("G"));
+        }
+
+        if (mMallocFreeUnmap != null) {
+            mMallocFreeUnmap.setChecked(SystemProperties.get(MALLOC_PERSIST_PROP).contains("U"));
+        }
+
+        if (mMallocValidate != null) {
+            mMallocValidate.setChecked(SystemProperties.get(MALLOC_PERSIST_PROP).contains("V"));
+        }
+
+        if (mMallocJunk != null) {
+            mMallocJunk.setChecked(SystemProperties.get(MALLOC_PERSIST_PROP).contains("J"));
+        }
+
         updateOwnerInfo();
     }
 
@@ -673,6 +723,38 @@ public class SecuritySettings extends SettingsPreferenceFragment
         createPreferenceHierarchy();
     }
 
+    private enum MallocState { DISABLED, NONE, ENABLED };
+
+    private MallocState toMallocState(boolean value) {
+        return value ? MallocState.ENABLED : MallocState.DISABLED;
+    }
+
+    private void setMallocOption(MallocState value, String option) {
+        String options = SystemProperties.get(MALLOC_PERSIST_PROP);
+
+        switch (value) {
+            case DISABLED:
+                if (options.contains(option.toUpperCase())) {
+                    options = options.replace(option.toUpperCase(), option);
+                } else if (!options.contains(option)) {
+                    options += option;
+                }
+                break;
+            case NONE:
+                options = options.replace(option, "").replace(option.toUpperCase(), "");
+                break;
+            case ENABLED:
+                if (options.contains(option)) {
+                    options = options.replace(option, option.toUpperCase());
+                } else if (!options.contains(option.toUpperCase())) {
+                    options += option.toUpperCase();
+                }
+                break;
+        }
+
+        SystemProperties.set(MALLOC_PERSIST_PROP, options);
+    }
+
     @Override
     public boolean onPreferenceChange(Preference preference, Object value) {
         boolean result = true;
@@ -704,6 +786,17 @@ public class SecuritySettings extends SettingsPreferenceFragment
             } else {
                 setNonMarketAppsAllowed(false);
             }
+        } else if (KEY_MALLOC_CANARIES.equals(key)) {
+            setMallocOption(toMallocState((Boolean) value), "c");
+        } else if (KEY_MALLOC_GUARD.equals(key)) {
+            setMallocOption(toMallocState((Boolean) value), "g");
+        } else if (KEY_MALLOC_FREEUNMAP.equals(key)) {
+            setMallocOption(toMallocState((Boolean) value), "u");
+        } else if (KEY_MALLOC_VALIDATE_FULL.equals(key)) {
+            setMallocOption(toMallocState((Boolean) value), "v");
+        } else if (KEY_MALLOC_JUNK.equals(key)) {
+            MallocState state = (Boolean) value ? MallocState.ENABLED : MallocState.NONE;
+            setMallocOption(state, "j");
         }
         return result;
     }
