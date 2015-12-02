@@ -37,6 +37,7 @@ import android.os.SystemProperties;
 import android.os.UserHandle;
 import android.os.UserManager;
 import android.preference.Preference;
+import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceScreen;
 import android.preference.SwitchPreference;
 import android.provider.SearchIndexableResource;
@@ -57,9 +58,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class WirelessSettings extends SettingsPreferenceFragment implements Indexable {
+public class WirelessSettings extends SettingsPreferenceFragment
+        implements OnPreferenceChangeListener, Indexable {
     private static final String TAG = "WirelessSettings";
 
+    private static final String KEY_RANDOMIZE_MAC = "randomize_mac";
     private static final String KEY_TOGGLE_AIRPLANE = "toggle_airplane";
     private static final String KEY_TOGGLE_NFC = "toggle_nfc";
     private static final String KEY_WIMAX_SETTINGS = "wimax_settings";
@@ -73,8 +76,12 @@ public class WirelessSettings extends SettingsPreferenceFragment implements Inde
     private static final String KEY_CELL_BROADCAST_SETTINGS = "cell_broadcast_settings";
     private static final String KEY_WFC_SETTINGS = "wifi_calling_settings";
 
+    private static final String RANDOMIZE_MAC_PERSIST_PROP = "persist.privacy.randomize_mac";
+
     public static final String EXIT_ECM_RESULT = "exit_ecm_result";
     public static final int REQUEST_CODE_EXIT_ECM = 1;
+
+    private SwitchPreference mRandomizeMac;
 
     private AirplaneModeEnabler mAirplaneModeEnabler;
     private SwitchPreference mAirplaneModePreference;
@@ -229,6 +236,13 @@ public class WirelessSettings extends SettingsPreferenceFragment implements Inde
         final boolean isSecondaryUser = myUserId != UserHandle.USER_OWNER;
 
         final Activity activity = getActivity();
+        if (isSecondaryUser) {
+            PreferenceScreen root = getPreferenceScreen();
+            root.removePreference(root.findPreference(KEY_RANDOMIZE_MAC));
+        } else {
+            mRandomizeMac = (SwitchPreference) findPreference(KEY_RANDOMIZE_MAC);
+            mRandomizeMac.setOnPreferenceChangeListener(this);
+        }
         mAirplaneModePreference = (SwitchPreference) findPreference(KEY_TOGGLE_AIRPLANE);
         SwitchPreference nfc = (SwitchPreference) findPreference(KEY_TOGGLE_NFC);
         PreferenceScreen androidBeam = (PreferenceScreen) findPreference(KEY_ANDROID_BEAM_SETTINGS);
@@ -361,6 +375,10 @@ public class WirelessSettings extends SettingsPreferenceFragment implements Inde
     public void onResume() {
         super.onResume();
 
+        if (mRandomizeMac != null) {
+            mRandomizeMac.setChecked(SystemProperties.getBoolean(RANDOMIZE_MAC_PERSIST_PROP, true));
+        }
+
         mAirplaneModeEnabler.resume();
         if (mNfcEnabler != null) {
             mNfcEnabler.resume();
@@ -380,6 +398,16 @@ public class WirelessSettings extends SettingsPreferenceFragment implements Inde
             removePreference(KEY_WFC_SETTINGS);
         }
     }
+
+     @Override
+     public boolean onPreferenceChange(Preference preference, Object newValue) {
+         if (preference == mRandomizeMac) {
+             SystemProperties.set(RANDOMIZE_MAC_PERSIST_PROP, (Boolean) newValue ? "1" : "0");
+             return true;
+         }
+
+         return false;
+     }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
