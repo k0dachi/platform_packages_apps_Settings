@@ -7045,4 +7045,16 @@
 
     <!-- Description of feature to change color setting for the display [CHAR LIMIT=NONE] -->
     <string name="picture_color_mode_desc">Use sRGB</string>
+
+    <!-- malloc configuration -->
+    <string name="malloc_canaries_title">Canaries for small allocations</string>
+    <string name="malloc_canaries_summary">Prevent and detect some forms of heap corruption for small allocations at the expense of higher memory usage</string>
+    <string name="malloc_guard_title">Guard pages for large allocations</string>
+    <string name="malloc_guard_summary">Prevent and detect some forms of heap corruption for large allocations at the expense of performance</string>
+    <string name="malloc_freeunmap_title">Page cache memory protection</string>
+    <string name="malloc_freeunmap_summary">Prevent and detect some use-after-free bugs at the expense of performance</string>
+    <string name="malloc_junk_title">Full data sanitization</string>
+    <string name="malloc_junk_summary">Fully sanitize released memory allocations at the expense of performance. By default, only up to 2048 bytes are sanitized.</string>
+    <string name="malloc_validate_full_title">Full data sanitization validation</string>
+    <string name="malloc_validate_full_summary">Fully validate that sanitized data remains sanitized to detect use-after-free bugs at the expense of performance. By default, only up to 32 bytes are validated.</string>
 </resources>

@@ -123,6 +123,31 @@
                 android:value="com.android.settings.Settings$UsageAccessSettingsActivity" />
         </Preference>
 
+        <SwitchPreference android:key="malloc_canaries"
+                          android:title="@string/malloc_canaries_title"
+                          android:summary="@string/malloc_canaries_summary"
+                          android:persistent="false"/>
+
+        <SwitchPreference android:key="malloc_guard"
+                          android:title="@string/malloc_guard_title"
+                          android:summary="@string/malloc_guard_summary"
+                          android:persistent="false"/>
+
+        <SwitchPreference android:key="malloc_freeunmap"
+                          android:title="@string/malloc_freeunmap_title"
+                          android:summary="@string/malloc_freeunmap_summary"
+                          android:persistent="false"/>
+
+        <SwitchPreference android:key="malloc_junk"
+                          android:title="@string/malloc_junk_title"
+                          android:summary="@string/malloc_junk_summary"
+                          android:persistent="false"/>
+
+        <SwitchPreference android:key="malloc_validate_full"
+                          android:title="@string/malloc_validate_full_title"
+                          android:summary="@string/malloc_validate_full_summary"
+                          android:persistent="false"/>
+
     </PreferenceCategory>
 
 </PreferenceScreen>
