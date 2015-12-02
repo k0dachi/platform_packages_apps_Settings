@@ -7057,4 +7057,8 @@
     <string name="malloc_junk_summary">Fully sanitize released memory allocations at the expense of performance. By default, only up to 2048 bytes are sanitized.</string>
     <string name="malloc_validate_full_title">Full data sanitization validation</string>
     <string name="malloc_validate_full_summary">Fully validate that sanitized data remains sanitized to detect use-after-free bugs at the expense of performance. By default, only up to 32 bytes are validated.</string>
+
+    <!-- randomize MAC addresses -->
+    <string name="randomize_mac_title">Randomize MAC addresses</string>
+    <string name="randomize_mac_summary">Assign random MAC addresses when network devices are enabled</string>
 </resources>
