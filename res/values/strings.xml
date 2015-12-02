@@ -7059,4 +7059,8 @@
     <string name="malloc_validate_full_summary">Fully validate that sanitized data remains sanitized to detect use-after-free bugs at the expense of performance. By default, only up to 32 bytes are validated.</string>
     <string name="malloc_quarantine_size_title">Allocation quarantine size</string>
     <string name="malloc_quarantine_size_summary">Up to <xliff:g id="quarantine_description">%1$s</xliff:g> of memory</string>
+
+    <!-- randomize MAC addresses -->
+    <string name="randomize_mac_title">Randomize MAC addresses</string>
+    <string name="randomize_mac_summary">Assign random MAC addresses when network devices are enabled</string>
 </resources>
