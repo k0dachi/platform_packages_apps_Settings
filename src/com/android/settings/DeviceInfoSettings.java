@@ -196,11 +196,7 @@ public class DeviceInfoSettings extends SettingsPreferenceFragment implements In
 
         // These are contained by the root preference screen
         PreferenceGroup parentPreference = getPreferenceScreen();
-        if (UserHandle.myUserId() == UserHandle.USER_OWNER) {
-            Utils.updatePreferenceToSpecificActivityOrRemove(act, parentPreference,
-                    KEY_SYSTEM_UPDATE_SETTINGS,
-                    Utils.UPDATE_PREFERENCE_FLAG_SET_TITLE_TO_MATCHING_ACTIVITY);
-        } else {
+        if (UserHandle.myUserId() != UserHandle.USER_OWNER) {
             // Remove for secondary users
             removePreference(KEY_SYSTEM_UPDATE_SETTINGS);
         }
