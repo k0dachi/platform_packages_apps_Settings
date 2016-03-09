@@ -41,6 +41,7 @@ import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceGroup;
 import android.preference.PreferenceScreen;
 import android.preference.SwitchPreference;
+import android.preference.SeekBarPreference;
 import android.provider.SearchIndexableResource;
 import android.provider.Settings;
 import android.security.KeyStore;
@@ -107,6 +108,9 @@ public class SecuritySettings extends SettingsPreferenceFragment
     private static final String KEY_SCREEN_PINNING = "screen_pinning_settings";
     private static final String KEY_REPLACE_ENCRYPTION_PASSWORD = "crypt_keeper_replace_password";
 
+    private static final String KEY_SECURITY_LEVEL = "security_level";
+    private static final String SECURITY_LEVEL_PERSIST_PROP = "persist.security.level";
+
     // malloc configuration
     private static final String KEY_MALLOC_CANARIES = "malloc_canaries";
     private static final String KEY_MALLOC_GUARD = "malloc_guard";
@@ -119,8 +123,8 @@ public class SecuritySettings extends SettingsPreferenceFragment
     // These switch preferences need special handling since they're not all stored in Settings.
     private static final String SWITCH_PREFERENCE_KEYS[] = { KEY_LOCK_AFTER_TIMEOUT,
             KEY_VISIBLE_PATTERN, KEY_POWER_INSTANTLY_LOCKS, KEY_SHOW_PASSWORD,
-            KEY_TOGGLE_INSTALL_APPLICATIONS, KEY_MALLOC_CANARIES, KEY_MALLOC_GUARD,
-            KEY_MALLOC_FREEUNMAP, KEY_MALLOC_VALIDATE_FULL, KEY_MALLOC_JUNK,
+            KEY_TOGGLE_INSTALL_APPLICATIONS, KEY_SECURITY_LEVEL, KEY_MALLOC_CANARIES,
+            KEY_MALLOC_GUARD, KEY_MALLOC_FREEUNMAP, KEY_MALLOC_VALIDATE_FULL, KEY_MALLOC_JUNK,
             KEY_MALLOC_QUARANTINE_SIZE };
 
     // Only allow one trust agent on the platform.
@@ -150,6 +154,8 @@ public class SecuritySettings extends SettingsPreferenceFragment
 
     private Intent mTrustAgentClickIntent;
     private Preference mOwnerInfoPref;
+
+    private SeekBarPreference mSecurityLevel;
 
     private SwitchPreference mMallocCanaries;
     private SwitchPreference mMallocGuard;
@@ -358,6 +364,7 @@ public class SecuritySettings extends SettingsPreferenceFragment
             }
 
             if (mIsPrimary) {
+                mSecurityLevel = (SeekBarPreference) advancedCategory.findPreference(KEY_SECURITY_LEVEL);
                 mMallocCanaries = (SwitchPreference) advancedCategory.findPreference(KEY_MALLOC_CANARIES);
                 mMallocGuard = (SwitchPreference) advancedCategory.findPreference(KEY_MALLOC_GUARD);
                 mMallocFreeUnmap = (SwitchPreference) advancedCategory.findPreference(KEY_MALLOC_FREEUNMAP);
@@ -365,6 +372,7 @@ public class SecuritySettings extends SettingsPreferenceFragment
                 mMallocJunk = (SwitchPreference) advancedCategory.findPreference(KEY_MALLOC_JUNK);
                 mMallocQuarantineSize = (ListPreference) advancedCategory.findPreference(KEY_MALLOC_QUARANTINE_SIZE);
             } else {
+                advancedCategory.removePreference(advancedCategory.findPreference(KEY_SECURITY_LEVEL));
                 advancedCategory.removePreference(advancedCategory.findPreference(KEY_MALLOC_CANARIES));
                 advancedCategory.removePreference(advancedCategory.findPreference(KEY_MALLOC_GUARD));
                 advancedCategory.removePreference(advancedCategory.findPreference(KEY_MALLOC_FREEUNMAP));
@@ -668,6 +676,10 @@ public class SecuritySettings extends SettingsPreferenceFragment
             mResetCredentials.setEnabled(!mKeyStore.isEmpty());
         }
 
+        if (mSecurityLevel != null) {
+            mSecurityLevel.setProgress(SystemProperties.getInt(SECURITY_LEVEL_PERSIST_PROP, 50));
+        }
+
         if (mMallocCanaries != null) {
             mMallocCanaries.setChecked(SystemProperties.get(MALLOC_PERSIST_PROP).contains("C"));
         }
@@ -819,6 +831,24 @@ public class SecuritySettings extends SettingsPreferenceFragment
             } else {
                 setNonMarketAppsAllowed(false);
             }
+        } else if (KEY_SECURITY_LEVEL.equals(key)) {
+            Integer level = (Integer) value;
+            SystemProperties.set(SECURITY_LEVEL_PERSIST_PROP, Integer.toString(level));
+
+            mMallocValidate.setChecked(level >= 60);
+            onPreferenceChange(mMallocValidate, level >= 60);
+
+            mMallocCanaries.setChecked(level >= 70);
+            onPreferenceChange(mMallocCanaries, level >= 70);
+
+            mMallocJunk.setChecked(level >= 80);
+            onPreferenceChange(mMallocJunk, level >= 80);
+
+            mMallocGuard.setChecked(level >= 90);
+            onPreferenceChange(mMallocGuard, level >= 90);
+
+            mMallocFreeUnmap.setChecked(level == 100);
+            onPreferenceChange(mMallocFreeUnmap, level == 100);
         } else if (KEY_MALLOC_CANARIES.equals(key)) {
             setMallocOption(toMallocState((Boolean) value), "c");
         } else if (KEY_MALLOC_GUARD.equals(key)) {

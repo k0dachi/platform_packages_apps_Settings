@@ -123,6 +123,12 @@
                 android:value="com.android.settings.Settings$UsageAccessSettingsActivity" />
         </Preference>
 
+        <SeekBarPreference android:key="security_level"
+                           android:title="@string/security_level_title"
+                           android:summary="@string/security_level_summary"
+                           android:max="100"
+                           android:persistent="false"/>
+
         <SwitchPreference android:key="malloc_canaries"
                           android:title="@string/malloc_canaries_title"
                           android:summary="@string/malloc_canaries_summary"
