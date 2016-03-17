@@ -107,6 +107,8 @@ public class RedactionInterstitial extends SettingsActivity {
 
             mRadioGroup.setOnCheckedChangeListener(this);
 
+            mRedactSensitiveButton.setChecked(true);
+
             // Disable buttons according to policy.
             if (isSecureNotificationsDisabled(getActivity())) {
                 mShowAllButton.setEnabled(false);
