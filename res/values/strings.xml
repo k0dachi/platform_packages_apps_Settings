@@ -7061,6 +7061,9 @@
     <!-- Description of feature to change color setting for the display [CHAR LIMIT=NONE] -->
     <string name="picture_color_mode_desc">Use sRGB</string>
 
+    <string name="deny_new_usb_title">USB accessories</string>
+    <string name="deny_new_usb_summary">Control support for USB peripherals such as input (mice, keyboards, joysticks) and storage devices.</string>
+
     <string name="security_level_title">Security level</string>
     <string name="security_level_summary">Control the balance between security (high) and performance (low)</string>
 
