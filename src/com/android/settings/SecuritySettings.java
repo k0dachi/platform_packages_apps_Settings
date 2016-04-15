@@ -108,6 +108,10 @@ public class SecuritySettings extends SettingsPreferenceFragment
     private static final String KEY_SCREEN_PINNING = "screen_pinning_settings";
     private static final String KEY_REPLACE_ENCRYPTION_PASSWORD = "crypt_keeper_replace_password";
 
+    private static final String KEY_DENY_NEW_USB = "deny_new_usb";
+    private static final String DENY_NEW_USB_PROP = "security.deny_new_usb";
+    private static final String DENY_NEW_USB_PERSIST_PROP = "persist.security.deny_new_usb";
+
     private static final String KEY_SECURITY_LEVEL = "security_level";
     private static final String SECURITY_LEVEL_PERSIST_PROP = "persist.security.level";
 
@@ -123,9 +127,9 @@ public class SecuritySettings extends SettingsPreferenceFragment
     // These switch preferences need special handling since they're not all stored in Settings.
     private static final String SWITCH_PREFERENCE_KEYS[] = { KEY_LOCK_AFTER_TIMEOUT,
             KEY_VISIBLE_PATTERN, KEY_POWER_INSTANTLY_LOCKS, KEY_SHOW_PASSWORD,
-            KEY_TOGGLE_INSTALL_APPLICATIONS, KEY_SECURITY_LEVEL, KEY_MALLOC_CANARIES,
-            KEY_MALLOC_GUARD, KEY_MALLOC_FREEUNMAP, KEY_MALLOC_VALIDATE_FULL, KEY_MALLOC_JUNK,
-            KEY_MALLOC_QUARANTINE_SIZE };
+            KEY_TOGGLE_INSTALL_APPLICATIONS, KEY_DENY_NEW_USB, KEY_SECURITY_LEVEL,
+            KEY_MALLOC_CANARIES, KEY_MALLOC_GUARD, KEY_MALLOC_FREEUNMAP, KEY_MALLOC_VALIDATE_FULL,
+            KEY_MALLOC_JUNK, KEY_MALLOC_QUARANTINE_SIZE };
 
     // Only allow one trust agent on the platform.
     private static final boolean ONLY_ONE_TRUST_AGENT = true;
@@ -154,6 +158,8 @@ public class SecuritySettings extends SettingsPreferenceFragment
 
     private Intent mTrustAgentClickIntent;
     private Preference mOwnerInfoPref;
+
+    private ListPreference mDenyNewUsb;
 
     private SeekBarPreference mSecurityLevel;
 
@@ -245,6 +251,16 @@ public class SecuritySettings extends SettingsPreferenceFragment
                     return true;
                 }
             });
+        }
+
+        if (mIsPrimary) {
+            mDenyNewUsb = (ListPreference) findPreference(KEY_DENY_NEW_USB);
+        } else {
+            PreferenceGroup securityCategory = (PreferenceGroup)
+                    root.findPreference(KEY_SECURITY_CATEGORY);
+            if (securityCategory != null) {
+                securityCategory.removePreference(securityCategory.findPreference(KEY_DENY_NEW_USB));
+            }
         }
 
         if (mIsPrimary) {
@@ -676,6 +692,10 @@ public class SecuritySettings extends SettingsPreferenceFragment
             mResetCredentials.setEnabled(!mKeyStore.isEmpty());
         }
 
+        if (mDenyNewUsb != null) {
+            mDenyNewUsb.setValue(SystemProperties.get(DENY_NEW_USB_PERSIST_PROP, "disabled"));
+        }
+
         if (mSecurityLevel != null) {
             mSecurityLevel.setProgress(SystemProperties.getInt(SECURITY_LEVEL_PERSIST_PROP, 50));
         }
@@ -830,6 +850,13 @@ public class SecuritySettings extends SettingsPreferenceFragment
                 result = false;
             } else {
                 setNonMarketAppsAllowed(false);
+            }
+        } else if (KEY_DENY_NEW_USB.equals(key)) {
+            String mode = (String) value;
+            SystemProperties.set(DENY_NEW_USB_PERSIST_PROP, mode);
+            // The dynamic mode defaults to the disabled state
+            if (mode.equals("dynamic")) {
+                SystemProperties.set(DENY_NEW_USB_PROP, "0");
             }
         } else if (KEY_SECURITY_LEVEL.equals(key)) {
             Integer level = (Integer) value;
