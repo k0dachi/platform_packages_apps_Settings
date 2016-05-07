@@ -1389,4 +1389,42 @@
         <item>0</item>
     </string-array>
 
+    <!-- Security Settings -->
+    <string-array name="malloc_quarantine_size_entries">
+        <item>0 B</item>
+        <item>4 kiB</item>
+        <item>8 kiB</item>
+        <item>16 kiB</item>
+        <item>32 kiB</item>
+        <item>64 kiB</item>
+        <item>128 kiB</item>
+        <item>256 kiB</item>
+        <item>512 kiB</item>
+        <item>1 MiB</item>
+    </string-array>
+
+    <!-- Do not translate. -->
+    <string-array name="malloc_quarantine_size_values" translatable="false">
+        <!-- Do not translate. -->
+        <item>0</item>
+        <!-- Do not translate. -->
+        <item>4096</item>
+        <!-- Do not translate. -->
+        <item>8192</item>
+        <!-- Do not translate. -->
+        <item>16384</item>
+        <!-- Do not translate. -->
+        <item>32768</item>
+        <!-- Do not translate. -->
+        <item>65536</item>
+        <!-- Do not translate. -->
+        <item>131072</item>
+        <!-- Do not translate. -->
+        <item>262144</item>
+        <!-- Do not translate. -->
+        <item>524288</item>
+        <!-- Do not translate. -->
+        <item>1048576</item>
+    </string-array>
+
 </resources>

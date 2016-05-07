@@ -111,13 +111,15 @@ public class SecuritySettings extends SettingsPreferenceFragment
     private static final String KEY_MALLOC_FREEUNMAP = "malloc_freeunmap";
     private static final String KEY_MALLOC_VALIDATE_FULL = "malloc_validate_full";
     private static final String KEY_MALLOC_JUNK = "malloc_junk";
+    private static final String KEY_MALLOC_QUARANTINE_SIZE = "malloc_quarantine_size";
     private static final String MALLOC_PERSIST_PROP = "persist.libc.malloc.options";
 
     // These switch preferences need special handling since they're not all stored in Settings.
     private static final String SWITCH_PREFERENCE_KEYS[] = { KEY_LOCK_AFTER_TIMEOUT,
             KEY_VISIBLE_PATTERN, KEY_POWER_INSTANTLY_LOCKS, KEY_SHOW_PASSWORD,
             KEY_TOGGLE_INSTALL_APPLICATIONS, KEY_MALLOC_CANARIES, KEY_MALLOC_GUARD,
-            KEY_MALLOC_FREEUNMAP, KEY_MALLOC_VALIDATE_FULL, KEY_MALLOC_JUNK };
+            KEY_MALLOC_FREEUNMAP, KEY_MALLOC_VALIDATE_FULL, KEY_MALLOC_JUNK,
+            KEY_MALLOC_QUARANTINE_SIZE };
 
     // Only allow one trust agent on the platform.
     private static final boolean ONLY_ONE_TRUST_AGENT = true;
@@ -152,6 +154,7 @@ public class SecuritySettings extends SettingsPreferenceFragment
     private SwitchPreference mMallocFreeUnmap;
     private SwitchPreference mMallocValidate;
     private SwitchPreference mMallocJunk;
+    private ListPreference mMallocQuarantineSize;
 
     @Override
     protected int getMetricsCategory() {
@@ -349,12 +352,14 @@ public class SecuritySettings extends SettingsPreferenceFragment
                 mMallocFreeUnmap = (SwitchPreference) advancedCategory.findPreference(KEY_MALLOC_FREEUNMAP);
                 mMallocValidate = (SwitchPreference) advancedCategory.findPreference(KEY_MALLOC_VALIDATE_FULL);
                 mMallocJunk = (SwitchPreference) advancedCategory.findPreference(KEY_MALLOC_JUNK);
+                mMallocQuarantineSize = (ListPreference) advancedCategory.findPreference(KEY_MALLOC_QUARANTINE_SIZE);
             } else {
                 advancedCategory.removePreference(advancedCategory.findPreference(KEY_MALLOC_CANARIES));
                 advancedCategory.removePreference(advancedCategory.findPreference(KEY_MALLOC_GUARD));
                 advancedCategory.removePreference(advancedCategory.findPreference(KEY_MALLOC_FREEUNMAP));
                 advancedCategory.removePreference(advancedCategory.findPreference(KEY_MALLOC_VALIDATE_FULL));
                 advancedCategory.removePreference(advancedCategory.findPreference(KEY_MALLOC_JUNK));
+                advancedCategory.removePreference(advancedCategory.findPreference(KEY_MALLOC_QUARANTINE_SIZE));
             }
         }
 
@@ -672,6 +677,23 @@ public class SecuritySettings extends SettingsPreferenceFragment
             mMallocJunk.setChecked(SystemProperties.get(MALLOC_PERSIST_PROP).contains("J"));
         }
 
+        if (mMallocQuarantineSize != null) {
+            int size = 32;
+            String options = SystemProperties.get(MALLOC_PERSIST_PROP);
+            for (int i = 0; i < options.length(); i++) {
+                char c = options.charAt(i);
+                if (c == '+') {
+                    size <<= 1;
+                    if (size > 256) {
+                        size = 256;
+                    }
+                } else if (c == '-') {
+                    size >>= 1;
+                }
+            }
+            mMallocQuarantineSize.setValue(String.valueOf(size * 4096));
+        }
+
         updateOwnerInfo();
     }
 
@@ -797,6 +819,21 @@ public class SecuritySettings extends SettingsPreferenceFragment
         } else if (KEY_MALLOC_JUNK.equals(key)) {
             MallocState state = (Boolean) value ? MallocState.ENABLED : MallocState.NONE;
             setMallocOption(state, "j");
+        } else if (KEY_MALLOC_QUARANTINE_SIZE.equals(key)) {
+            String options = SystemProperties.get(MALLOC_PERSIST_PROP);
+            options = options.replace("+", "").replace("-", "");
+            int quarantine_size = Integer.parseInt((String) value) / 4096;
+            int size = 32;
+            while (size != quarantine_size) {
+                if (size > quarantine_size) {
+                    size >>= 1;
+                    options += "-";
+                } else {
+                    size <<= 1;
+                    options += "+";
+                }
+            }
+            SystemProperties.set(MALLOC_PERSIST_PROP, options);
         }
         return result;
     }
