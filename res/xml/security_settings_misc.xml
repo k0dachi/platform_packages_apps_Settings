@@ -148,6 +148,14 @@
                           android:summary="@string/malloc_validate_full_summary"
                           android:persistent="false"/>
 
+        <ListPreference
+                android:key="malloc_quarantine_size"
+                android:title="@string/malloc_quarantine_size_title"
+                android:summary="@string/malloc_quarantine_size_summary"
+                android:persistent="false"
+                android:entries="@array/malloc_quarantine_size_entries"
+                android:entryValues="@array/malloc_quarantine_size_values" />
+
     </PreferenceCategory>
 
 </PreferenceScreen>
