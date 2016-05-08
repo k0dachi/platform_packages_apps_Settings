@@ -835,6 +835,47 @@ public class SecuritySettings extends SettingsPreferenceFragment
             Integer level = (Integer) value;
             SystemProperties.set(SECURITY_LEVEL_PERSIST_PROP, Integer.toString(level));
 
+            int quarantine_size = 0;
+
+            if (level >= 5) {
+                quarantine_size = 1;
+            }
+
+            if (level >= 10) {
+                quarantine_size = 2;
+            }
+
+            if (level >= 20) {
+                quarantine_size = 4;
+            }
+
+            if (level >= 30) {
+                quarantine_size = 8;
+            }
+
+            if (level >= 40) {
+                quarantine_size = 16;
+            }
+
+            if (level >= 50) {
+                quarantine_size = 32;
+            }
+
+            if (level >= 60) {
+                quarantine_size = 64;
+            }
+
+            if (level >= 70) {
+                quarantine_size = 128;
+            }
+
+            if (level >= 80) {
+                quarantine_size = 256;
+            }
+
+            mMallocQuarantineSize.setValue(String.valueOf(quarantine_size * 4096));
+            onPreferenceChange(mMallocQuarantineSize, String.valueOf(quarantine_size * 4096));
+
             mMallocValidate.setChecked(level >= 60);
             onPreferenceChange(mMallocValidate, level >= 60);
 
