@@ -903,11 +903,11 @@ public class SecuritySettings extends SettingsPreferenceFragment
             mMallocQuarantineSize.setValue(String.valueOf(quarantine_size * 4096));
             onPreferenceChange(mMallocQuarantineSize, String.valueOf(quarantine_size * 4096));
 
+            mMallocCanaries.setChecked(level >= 50);
+            onPreferenceChange(mMallocCanaries, level >= 50);
+
             mMallocValidate.setChecked(level >= 60);
             onPreferenceChange(mMallocValidate, level >= 60);
-
-            mMallocCanaries.setChecked(level >= 70);
-            onPreferenceChange(mMallocCanaries, level >= 70);
 
             mMallocJunk.setChecked(level >= 80);
             onPreferenceChange(mMallocJunk, level >= 80);
