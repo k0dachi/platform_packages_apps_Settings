@@ -717,7 +717,7 @@ public class SecuritySettings extends SettingsPreferenceFragment
         }
 
         if (mMallocJunk != null) {
-            mMallocJunk.setChecked(SystemProperties.get(MALLOC_PERSIST_PROP).contains("J"));
+            mMallocJunk.setChecked(!SystemProperties.get(MALLOC_PERSIST_PROP).contains("j"));
         }
 
         if (mMallocQuarantineSize != null) {
@@ -788,33 +788,21 @@ public class SecuritySettings extends SettingsPreferenceFragment
         createPreferenceHierarchy();
     }
 
-    private enum MallocState { DISABLED, NONE, ENABLED };
-
-    private MallocState toMallocState(boolean value) {
-        return value ? MallocState.ENABLED : MallocState.DISABLED;
-    }
-
-    private void setMallocOption(MallocState value, String option) {
+    private void setMallocOption(boolean value, String option) {
         String options = SystemProperties.get(MALLOC_PERSIST_PROP);
 
-        switch (value) {
-            case DISABLED:
-                if (options.contains(option.toUpperCase())) {
-                    options = options.replace(option.toUpperCase(), option);
-                } else if (!options.contains(option)) {
-                    options += option;
-                }
-                break;
-            case NONE:
-                options = options.replace(option, "").replace(option.toUpperCase(), "");
-                break;
-            case ENABLED:
-                if (options.contains(option)) {
-                    options = options.replace(option, option.toUpperCase());
-                } else if (!options.contains(option.toUpperCase())) {
-                    options += option.toUpperCase();
-                }
-                break;
+        if (value) {
+            if (options.contains(option)) {
+                options = options.replace(option, option.toUpperCase());
+            } else if (!options.contains(option.toUpperCase())) {
+                options += option.toUpperCase();
+            }
+        } else {
+            if (options.contains(option.toUpperCase())) {
+                options = options.replace(option.toUpperCase(), option);
+            } else if (!options.contains(option)) {
+                options += option;
+            }
         }
 
         SystemProperties.set(MALLOC_PERSIST_PROP, options);
@@ -903,14 +891,14 @@ public class SecuritySettings extends SettingsPreferenceFragment
             mMallocQuarantineSize.setValue(String.valueOf(quarantine_size * 4096));
             onPreferenceChange(mMallocQuarantineSize, String.valueOf(quarantine_size * 4096));
 
+            mMallocJunk.setChecked(level >= 30);
+            onPreferenceChange(mMallocJunk, level >= 30);
+
             mMallocCanaries.setChecked(level >= 50);
             onPreferenceChange(mMallocCanaries, level >= 50);
 
             mMallocValidate.setChecked(level >= 60);
             onPreferenceChange(mMallocValidate, level >= 60);
-
-            mMallocJunk.setChecked(level >= 80);
-            onPreferenceChange(mMallocJunk, level >= 80);
 
             mMallocGuard.setChecked(level >= 90);
             onPreferenceChange(mMallocGuard, level >= 90);
@@ -918,16 +906,15 @@ public class SecuritySettings extends SettingsPreferenceFragment
             mMallocFreeUnmap.setChecked(level == 100);
             onPreferenceChange(mMallocFreeUnmap, level == 100);
         } else if (KEY_MALLOC_CANARIES.equals(key)) {
-            setMallocOption(toMallocState((Boolean) value), "c");
+            setMallocOption((Boolean) value, "c");
         } else if (KEY_MALLOC_GUARD.equals(key)) {
-            setMallocOption(toMallocState((Boolean) value), "g");
+            setMallocOption((Boolean) value, "g");
         } else if (KEY_MALLOC_FREEUNMAP.equals(key)) {
-            setMallocOption(toMallocState((Boolean) value), "u");
+            setMallocOption((Boolean) value, "u");
         } else if (KEY_MALLOC_VALIDATE_FULL.equals(key)) {
-            setMallocOption(toMallocState((Boolean) value), "v");
+            setMallocOption((Boolean) value, "v");
         } else if (KEY_MALLOC_JUNK.equals(key)) {
-            MallocState state = (Boolean) value ? MallocState.ENABLED : MallocState.NONE;
-            setMallocOption(state, "j");
+            setMallocOption((Boolean) value, "j");
         } else if (KEY_MALLOC_QUARANTINE_SIZE.equals(key)) {
             String options = SystemProperties.get(MALLOC_PERSIST_PROP);
             options = options.replace("+", "").replace("-", "");
