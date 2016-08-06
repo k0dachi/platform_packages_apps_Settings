@@ -701,7 +701,7 @@ public class SecuritySettings extends SettingsPreferenceFragment
         }
 
         if (mMallocCanaries != null) {
-            mMallocCanaries.setChecked(SystemProperties.get(MALLOC_PERSIST_PROP).contains("C"));
+            mMallocCanaries.setChecked(!SystemProperties.get(MALLOC_PERSIST_PROP).contains("c"));
         }
 
         if (mMallocGuard != null) {
